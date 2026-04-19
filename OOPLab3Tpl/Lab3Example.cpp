@@ -1,465 +1,549 @@
-﻿#if !defined(_MSC_VER)
-#define CODING_VS_CODE
-#endif
+﻿// Лабораторна робота №3, Варіант 4
+// Задача 1.4 – Паралелограм
+// Задача 2.4 – Вектор (short)
+// Задача 3.4 – Матриця (short)
+// З інтерактивним введенням даних користувачем
+
 #include <iostream>
-#include <math.h>
-#if !defined(CODING_VS_CODE)
-	#include <clocale>
-#endif
+#include <cstdlib>
+#include <ctime>
+#include <fstream>
 using namespace std;
 
-class Icosahedron {
-	double a; // side of the icosahedron
-	unsigned int color;
+// ===================== ЗАДАЧА 1.4 – Паралелограм =====================
+
+class Parallelogram {
+    double a, h, b;
+    int color;
 public:
-	Icosahedron() : a(1.0), color(0) {}
-	Icosahedron(double ai) : a(ai), color(0) {}
-	Icosahedron(int ic) : a(1.0) { if (ic >= 0) color = ic; else color = 0; }
-	Icosahedron(double a, int c) {
-		this->a = a;
-		if (c >= 0) color = c; else color = 0;
-	}
-	double getA() const
-	{
-		return a;
-	}
-	void setA(double a)
-	{
-		if (a < 0 || a > 1.e+100)
-		{
-			cout << " Error set  a \n";
-			return;
-		}
-		this->a = a;
-	}
-	double getColor() const
-	{
-		return color;
-	}
-	void setColor(int c)
-	{
-		if (c < 0 || c > 10000)
-		{
-			cout << " Error set  color \n";
-			return;
-		}
-		this->color = c;
-	}
-	double S() {
-		return 5 * a * a * sqrt(3.0);
-	}
-	double V() {
-		return 5 * a * a * a * (3 + sqrt(5.0)) / 12.0;
-	}
-	double r() {
-		return a * (3 + sqrt(5.0)) / (4.0 * sqrt(3.0));
-	}
-	double R() {
-		return sqrt(2 * (5 + sqrt(5.0) * a)) / 4.0;
-	}
-	void printInfo()
-	{
-		cout << "\n a= " << a << " color = " << color;
-		cout << "  S= " << S() << " V = " << V() << "  r= " << r() << " V = " << R() << endl;
-	}
+    Parallelogram() : a(1), h(1), b(1), color(0) {}
 
+    Parallelogram(double a, double h, double b, int color = 0) {
+        if (a > 0 && h > 0 && b > 0 && h <= b) {
+            this->a = a;
+            this->h = h;
+            this->b = b;
+        }
+        else {
+            cout << "Error: invalid parameters, set to 1\n";
+            this->a = this->h = this->b = 1;
+        }
+        this->color = (color >= 0) ? color : 0;
+    }
+
+    void setA(double v) {
+        if (v > 0) a = v;
+        else cout << "Error setA: value must be > 0\n";
+    }
+
+    void setH(double v) {
+        if (v > 0 && v <= b) h = v;
+        else cout << "Error setH: value must be > 0 and <= b(" << b << ")\n";
+    }
+
+    void setB(double v) {
+        if (v >= h) b = v;
+        else cout << "Error setB: value must be >= h(" << h << ")\n";
+    }
+
+    void setColor(int v) {
+        if (v >= 0) color = v;
+        else cout << "Error setColor: value must be >= 0\n";
+    }
+
+    double getA()     const { return a; }
+    double getH()     const { return h; }
+    double getB()     const { return b; }
+    int    getColor() const { return color; }
+
+    double area()      const { return a * h; }
+    double perimeter() const { return 2 * (a + b); }
+
+    void print() const {
+        cout << "Parallelogram(a=" << a << " h=" << h << " b=" << b
+            << " col=" << color << "): area=" << area()
+            << " perimeter=" << perimeter() << "\n";
+    }
 };
-int mainExample1()
-{
-	Icosahedron obj;
-	obj.printInfo();
-	double in_a; int in_color;
-	cout << " Input side and color Icosahedron  "; cin >> in_a >> in_color;
-	Icosahedron obj1(in_a), obj2(in_color), obj3(in_a, in_color);
-	obj1.printInfo();
-	obj2.printInfo();
-	obj3.printInfo();
-	obj.setA(-5);
-	obj.printInfo();
-	obj.setA(5);
-	obj.printInfo();
-	obj.setA(2.e100);
-	obj.printInfo();
-	obj.setColor(-10);
-	obj.printInfo();
-	obj.setColor(10);
-	obj.printInfo();
-	obj.setColor(10001);
-	obj.printInfo();
-	cout << " End testing \n";
-	return 1;
-}
 
+// ===================== ЗАДАЧА 2.4 – Вектор (short) =====================
 
-// Ключове слово static 
+class VectorShort {
+    short* v;
+    int num, state;
+    static int count;
 
-class foo
-{
-private:
-	static int count; // загальне поле всім об'єктів
-	// (У сенсі "оголошення")
+    void alloc(int n, short val = 0) {
+        num = (n > 0) ? n : 1;
+        v = new(nothrow) short[num];
+        state = v ? 0 : -1;
+        if (v) for (int i = 0; i < num; i++) v[i] = val;
+        ++count;
+    }
 public:
-	foo() { incObj(); } // інкрементування під час створення об'єкта
-	static int incObj() { return ++count; }
-	int getcount() { return count; }
-};
-int  foo::count = 0;
-// Ключове слово static ставиться перед типом способу.В основному використовуються
-//для роботи зі статичними полями класу.
+    VectorShort() { alloc(1); }
+    VectorShort(int n) { alloc(n); }
+    VectorShort(int n, short val) { alloc(n, val); }
 
-/*  Example 3
-Створити тип даних - клас вектор, який має поля x, y типу double і змінну стану. У класі визначити
-o	конструктор без параметрів(інінціалізує поля в нуль);
-o	конструктор з одним параметром типу double (інінціалізує поля);
-o	конструктор з одним параметром вказівник на тип double (інінціалізує поля x, y значенням масиву за вказівником, якщо вказівник NULL (nulptr) то встановити код помилки);
-o	деструктор із виведенням інформації про стан вектора;
-o	визначити функції друку, додавання, віднімання, векторний добуток які здійснюють ці арифметичні операції з даними цього класу;
-o	функцію ділення на ціле типу double(при діленні на 0 змінити стан, а ділення не виконувати);
-o	визначити функцію порівняння менше які повертають true або false.
-У змінну стани встановлювати код помилки, діленні на 0, при передачі NULL (nulptr) в конструкторі із вказівником. Передбачити можливість підрахунку числа об'єктів даного типу. Написати програму тестування всіх можливостей цього класу.
-*/
-enum STATE {
-	OK, BAD_INIT, BAD_DIV
-};
+    VectorShort(const VectorShort& s) {
+        alloc(s.num);
+        if (v) for (int i = 0; i < num; i++) v[i] = s.v[i];
+        state = s.state;
+    }
 
-class Vec2
-{
-	double  x, y;
-	int state;
-	static int count;
+    ~VectorShort() {
+        delete[] v;
+        --count;
+    }
+
+    VectorShort& operator=(const VectorShort& s) {
+        if (this == &s) return *this;
+        delete[] v;
+        alloc(s.num);
+        if (v) for (int i = 0; i < num; i++) v[i] = s.v[i];
+        return *this;
+    }
+
+    void setElem(int i, short val = 0) {
+        if (i < 0 || i >= num) { state = -2; cout << "Error: index " << i << " out of bounds [0," << num - 1 << "]\n"; return; }
+        v[i] = val;
+    }
+
+    short getElem(int i) {
+        if (i < 0 || i >= num) { state = -2; cout << "Error: index " << i << " out of bounds [0," << num - 1 << "]\n"; return 0; }
+        return v[i];
+    }
+
+    int getNum()   const { return num; }
+    int getState() const { return state; }
+    static int getCount() { return count; }
+
+    VectorShort add(const VectorShort& b) const {
+        int n = num < b.num ? num : b.num;
+        VectorShort r(n);
+        for (int i = 0; i < n; i++) r.v[i] = v[i] + b.v[i];
+        return r;
+    }
+
+    VectorShort sub(const VectorShort& b) const {
+        int n = num < b.num ? num : b.num;
+        VectorShort r(n);
+        for (int i = 0; i < n; i++) r.v[i] = v[i] - b.v[i];
+        return r;
+    }
+
+    VectorShort mul(unsigned char s) const {
+        VectorShort r(num);
+        for (int i = 0; i < num; i++) r.v[i] = (short)(v[i] * s);
+        return r;
+    }
+
+    bool greaterThan(const VectorShort& b) const {
+        if (num != b.num) return false;
+        for (int i = 0; i < num; i++) if (v[i] <= b.v[i]) return false;
+        return true;
+    }
+
+    bool notEqual(const VectorShort& b) const {
+        if (num != b.num) return true;
+        for (int i = 0; i < num; i++) if (v[i] != b.v[i]) return true;
+        return false;
+    }
+
+    bool equalTo(const VectorShort& b) const { return !notEqual(b); }
+
+    void inputRandom() {
+        for (int i = 0; i < num; i++) v[i] = (short)(rand() % 21 - 10);
+    }
+
+    void inputUser() {
+        cout << "Enter " << num << " integers (short, from -32768 to 32767):\n";
+        for (int i = 0; i < num; i++) {
+            cout << "  [" << i << "]: ";
+            int t; cin >> t;
+            v[i] = (short)t;
+        }
+    }
+
+    void inputFromFile(ifstream& f) {
+        for (int i = 0; i < num && f; i++) {
+            int t; f >> t; v[i] = (short)t;
+        }
+    }
+
+    void print(const char* lbl = "") const {
+        if (*lbl) cout << lbl << ": ";
+        cout << "[";
+        for (int i = 0; i < num; i++) cout << v[i] << (i + 1 < num ? " " : "");
+        cout << "] state=" << state << "\n";
+    }
+};
+int VectorShort::count = 0;
+
+// ===================== ЗАДАЧА 3.4 – Матриця (short) =====================
+
+class MatrixShort {
+    short* data;
+    int rows, cols, state;
+    static int count;
+
+    int idx(int i, int j) const { return i * cols + j; }
+
+    void alloc(int r, int c, short val = 0) {
+        rows = r > 0 ? r : 1;
+        cols = c > 0 ? c : 1;
+        data = new(nothrow) short[rows * cols];
+        state = data ? 0 : -1;
+        if (data) for (int i = 0; i < rows * cols; i++) data[i] = val;
+        ++count;
+    }
 public:
-	Vec2() : x(0), y(0) {
-		state = OK; count++;
-	}   // 	 конструктор без параметрів
-	Vec2(double iv) : x(iv), y(iv) {
-		state = OK; count++;
-	}
-	Vec2(double ix, double iy);
-	Vec2(double* v);
-	~Vec2() {
-		count--;
-		cout << " state Vec " << state;
-		cout << " Vec delete \n";
-	}
-	Vec2(const Vec2&);
-	Vec2 Add(Vec2& d);
-	Vec2 Sub(Vec2& d);
-	Vec2 Mul(double d);
-	Vec2 Div(double d);
-	void Input();   //  !!! Без первантаження операцій    
-	void Output();  //  !!! Без первантаження операцій
-	bool CompLessAll(Vec2& s);
-	static int getCount() {
-		if (count <= 0) cout << " Немає об'єктів Vec2 ";
-		return count;
-	}
-	int getState() { return state; }
+    MatrixShort() { alloc(4, 4); }
+    MatrixShort(int n) { alloc(n, n); }
+    MatrixShort(int r, int c, short val) { alloc(r, c, val); }
+
+    MatrixShort(const MatrixShort& s) {
+        alloc(s.rows, s.cols);
+        if (data) for (int i = 0; i < rows * cols; i++) data[i] = s.data[i];
+        state = s.state;
+    }
+
+    ~MatrixShort() {
+        delete[] data;
+        --count;
+    }
+
+    MatrixShort& operator=(const MatrixShort& s) {
+        if (this == &s) return *this;
+        delete[] data;
+        alloc(s.rows, s.cols);
+        if (data) for (int i = 0; i < rows * cols; i++) data[i] = s.data[i];
+        return *this;
+    }
+
+    void setElem(int i, int j, short val = 0) {
+        if (i < 0 || i >= rows || j < 0 || j >= cols) {
+            state = -2;
+            cout << "Error: index [" << i << "][" << j << "] out of bounds " << rows << "x" << cols << "\n";
+            return;
+        }
+        data[idx(i, j)] = val;
+    }
+
+    short getElem(int i, int j) {
+        if (i < 0 || i >= rows || j < 0 || j >= cols) {
+            state = -2;
+            cout << "Error: index [" << i << "][" << j << "] out of bounds " << rows << "x" << cols << "\n";
+            return 0;
+        }
+        return data[idx(i, j)];
+    }
+
+    int getRows()  const { return rows; }
+    int getCols()  const { return cols; }
+    int getState() const { return state; }
+    static int getCount() { return count; }
+
+    MatrixShort add(const MatrixShort& b) const {
+        if (rows != b.rows || cols != b.cols) { cout << "Size error (add)\n"; return MatrixShort(1, 1, 0); }
+        MatrixShort r(rows, cols, 0);
+        for (int i = 0; i < rows * cols; i++) r.data[i] = (short)(data[i] + b.data[i]);
+        return r;
+    }
+
+    MatrixShort sub(const MatrixShort& b) const {
+        if (rows != b.rows || cols != b.cols) { cout << "Size error (sub)\n"; return MatrixShort(1, 1, 0); }
+        MatrixShort r(rows, cols, 0);
+        for (int i = 0; i < rows * cols; i++) r.data[i] = (short)(data[i] - b.data[i]);
+        return r;
+    }
+
+    MatrixShort mul(const MatrixShort& b) const {
+        if (cols != b.rows) { cout << "Size error (mul): cols(A)=" << cols << " != rows(B)=" << b.rows << "\n"; return MatrixShort(1, 1, 0); }
+        MatrixShort r(rows, b.cols, 0);
+        for (int i = 0; i < rows; i++)
+            for (int j = 0; j < b.cols; j++) {
+                int s = 0;
+                for (int k = 0; k < cols; k++) s += data[idx(i, k)] * b.data[b.idx(k, j)];
+                r.data[r.idx(i, j)] = (short)s;
+            }
+        return r;
+    }
+
+    MatrixShort mulScalar(short s) const {
+        MatrixShort r(rows, cols, 0);
+        for (int i = 0; i < rows * cols; i++) r.data[i] = (short)(data[i] * s);
+        return r;
+    }
+
+    bool greaterThan(const MatrixShort& b) const {
+        if (rows != b.rows || cols != b.cols) return false;
+        for (int i = 0; i < rows * cols; i++) if (data[i] <= b.data[i]) return false;
+        return true;
+    }
+
+    bool lessThan(const MatrixShort& b) const {
+        if (rows != b.rows || cols != b.cols) return false;
+        for (int i = 0; i < rows * cols; i++) if (data[i] >= b.data[i]) return false;
+        return true;
+    }
+
+    bool notEqual(const MatrixShort& b) const {
+        if (rows != b.rows || cols != b.cols) return true;
+        for (int i = 0; i < rows * cols; i++) if (data[i] != b.data[i]) return true;
+        return false;
+    }
+
+    void inputRandom() {
+        for (int i = 0; i < rows * cols; i++) data[i] = (short)(rand() % 21 - 10);
+    }
+
+    void inputUser() {
+        cout << "Enter matrix " << rows << "x" << cols << " (integers):\n";
+        for (int i = 0; i < rows; i++)
+            for (int j = 0; j < cols; j++) {
+                cout << "  [" << i << "][" << j << "]: ";
+                int t; cin >> t;
+                data[idx(i, j)] = (short)t;
+            }
+    }
+
+    void inputFromFile(ifstream& f) {
+        for (int i = 0; i < rows * cols && f; i++) {
+            int t; f >> t; data[i] = (short)t;
+        }
+    }
+
+    void print(const char* lbl = "") const {
+        if (*lbl) cout << lbl << ":\n";
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) cout << data[idx(i, j)] << "\t";
+            cout << "\n";
+        }
+        cout << "state=" << state << "\n";
+    }
 };
-int Vec2::count = 0;
-Vec2::Vec2(double ix, double iy) {
-	x = ix; y = iy;
-	state = OK;
-	count++;
-}
-Vec2::Vec2(const Vec2& s) {
-	//if (this == &s) return; //  // the expression is used in the old standard
-	x = s.x; y = s.y; state = OK;
-	count++;
-};
-Vec2::Vec2(double* v) {
-	if (v == nullptr) {
-		state = BAD_INIT; x = 0; y = 0;
-	}
-	else {
-		x = v[0]; y = v[1];
-		state = OK;
-	}
-	count++;
-}
-void Vec2::Input() {
-	cout << " Input  x y ";
-	cin >> x >> y;
-}
-void Vec2::Output() {
-	cout << " x =" << x << " y = " << y << " state  " << state << endl;
-}
+int MatrixShort::count = 0;
 
-Vec2 Vec2::Add(Vec2& s) {
-	Vec2 tmp;
-	tmp.x = x + s.x;
-	tmp.y = y + s.y;
-	return tmp;
-}
+// ===================== МЕНЮ ПАРАЛЕЛОГРАМА =====================
 
-Vec2 Vec2::Sub(Vec2& s) {
-	Vec2 tmp;
-	tmp.x = x - s.x;
-	tmp.y = y - s.y;
-	return tmp;
-}
-Vec2 Vec2::Div(double d) {
-	Vec2 tmp;
-	if (fabs(d) < 1.e-25) {
-		tmp.state = BAD_DIV;
-		cout << " Error div \n";
-		return *this;
-	}
-	tmp.x = x / d;
-	tmp.y = y / d;
-	return tmp;
-}
-Vec2 Vec2::Mul(double d) {
-	Vec2 tmp;
-	tmp.x = x * d;
-	tmp.y = y * d;
-	return tmp;
+void menuParallelogram() {
+    cout << "\n=== Task 1.4: Parallelogram ===\n";
+    double a, h, b;
+    int col;
+    cout << "Enter a (base > 0): ";   cin >> a;
+    cout << "Enter h (height > 0): ";   cin >> h;
+    cout << "Enter b (side > 0, >= h): "; cin >> b;
+    cout << "Enter color (>= 0): ";     cin >> col;
+
+    Parallelogram p(a, h, b, col);
+    p.print();
+
+    int choice;
+    do {
+        cout << "\n--- Operations ---\n";
+        cout << "1 - Change a\n";
+        cout << "2 - Change h\n";
+        cout << "3 - Change b\n";
+        cout << "4 - Change color\n";
+        cout << "5 - Print\n";
+        cout << "0 - Back\n";
+        cout << "Choice: ";
+        cin >> choice;
+
+        if (choice == 1) {
+            double v; cout << "New a: "; cin >> v; p.setA(v); p.print();
+        }
+        else if (choice == 2) {
+            double v; cout << "New h: "; cin >> v; p.setH(v); p.print();
+        }
+        else if (choice == 3) {
+            double v; cout << "New b: "; cin >> v; p.setB(v); p.print();
+        }
+        else if (choice == 4) {
+            int v; cout << "New color: "; cin >> v; p.setColor(v); p.print();
+        }
+        else if (choice == 5) {
+            p.print();
+        }
+    } while (choice != 0);
 }
 
-bool Vec2::CompLessAll(Vec2& s) {
+// ===================== МЕНЮ ВЕКТОРА =====================
 
-	if (x < s.x && y < s.y) return true;
-	return false;
+void menuVector() {
+    cout << "\n=== Task 2.4: Vector (short) ===\n";
+    srand((unsigned)time(nullptr));
+
+    int nA, nB;
+    cout << "Size of vector A: "; cin >> nA;
+    cout << "Size of vector B: "; cin >> nB;
+
+    VectorShort A(nA), B(nB);
+
+    int choice;
+    do {
+        cout << "\n--- Operations ---\n";
+        cout << "1  - Input A manually\n";
+        cout << "2  - Input B manually\n";
+        cout << "3  - Fill A randomly\n";
+        cout << "4  - Fill B randomly\n";
+        cout << "5  - Print A and B\n";
+        cout << "6  - A + B\n";
+        cout << "7  - A - B\n";
+        cout << "8  - A * scalar\n";
+        cout << "9  - Compare A and B\n";
+        cout << "10 - Change element of A\n";
+        cout << "11 - Get element of A\n";
+        cout << "0  - Back\n";
+        cout << "Choice: "; cin >> choice;
+
+        if (choice == 1) {
+            A.inputUser();
+        }
+        else if (choice == 2) {
+            B.inputUser();
+        }
+        else if (choice == 3) {
+            A.inputRandom(); cout << "A filled randomly\n"; A.print("A");
+        }
+        else if (choice == 4) {
+            B.inputRandom(); cout << "B filled randomly\n"; B.print("B");
+        }
+        else if (choice == 5) {
+            A.print("A"); B.print("B");
+        }
+        else if (choice == 6) {
+            A.add(B).print("A+B");
+        }
+        else if (choice == 7) {
+            A.sub(B).print("A-B");
+        }
+        else if (choice == 8) {
+            int s; cout << "Scalar (0-255): "; cin >> s;
+            A.mul((unsigned char)s).print("A*s");
+        }
+        else if (choice == 9) {
+            cout << "A>B:  " << A.greaterThan(B) << "\n";
+            cout << "A==B: " << A.equalTo(B) << "\n";
+            cout << "A!=B: " << A.notEqual(B) << "\n";
+        }
+        else if (choice == 10) {
+            int i; short val;
+            cout << "Index: "; cin >> i;
+            cout << "New value: "; cin >> val;
+            A.setElem(i, val);
+        }
+        else if (choice == 11) {
+            int i; cout << "Index: "; cin >> i;
+            cout << "A[" << i << "] = " << A.getElem(i) << "\n";
+        }
+    } while (choice != 0);
 }
 
-int mainExample3()
-{
-#if !defined(CODING_VS_CODE)
-	setlocale(LC_CTYPE, "ukr");
-	cout << "Тестування створенного класу \n";
-	cout << "Тестування конструкторiв \n"; 
-#else 
-	cout << "Testing create class  \n";
-	cout << "Testing crot's  \n";
-#endif
-	Vec2 ObjCDef;
-	ObjCDef.Output();
-	Vec2 ObjP1(10.0);
-	ObjP1.Output();
-	double  a = 1.0, b = 2.0;
-	Vec2  ObjP2(a, b);
-	ObjP2.Output();
-	Vec2 ObjCopy(ObjP2);
-	double* v = nullptr, v2[] = { 1.2, 3.3 };
-	Vec2  ObjP3(v2);
-	if (ObjP3.getState() != OK) cout << " ObjP3  x= 0  y= 0  \n";
-	Vec2  ObjP4(v2);
-	if (ObjP4.getState() != OK) cout << " ObjP4 x= 0  y= 0  \n";
-#if !defined(CODING_VS_CODE)
-	cout << " Кiлькiсть створених об'єктiв Vec2 " << Vec2::getCount() << endl;
-	cout << "Тестування введення \n";
-	ObjCDef.Input();
-	cout << "Тестування функцiй \n";
-	ObjCDef = ObjCDef.Add(ObjP2);
-	ObjCDef.Output();
-	cout << " \n Кiлькiсть створених об'єктiв Vec2 до Sub " << Vec2::getCount() << endl;
-	ObjCDef = ObjCDef.Sub(ObjP2);
-	cout << " \n Кiлькiсть створених об'єктiв Vec2 пiсля Sub " << Vec2::getCount() << endl;
-#else 
-	cout << "Testing input \n";
-	ObjCDef.Input();
-	cout << "Testing gunction \n";
-	ObjCDef = ObjCDef.Add(ObjP2);
-	ObjCDef.Output();
-	cout << " \n Counts create objects Vec2 before  Sub " << Vec2::getCount() << endl;
-	ObjCDef = ObjCDef.Sub(ObjP2);
-	cout << " \n  Counts create objects Vec2 after Sub  " << Vec2::getCount() << endl;
-#endif
+// ===================== МЕНЮ МАТРИЦІ =====================
 
-	ObjCDef.Output();
-	ObjCDef = ObjCDef.Mul(5);
-	ObjCDef.Output();
-	ObjCDef = ObjCDef.Div(1.3);
-	if (ObjCDef.getState() == STATE::BAD_DIV) cout << "BAD_DIV \n";
-	ObjCDef.Output();
+void menuMatrix() {
+    cout << "\n=== Task 3.4: Matrix (short) ===\n";
+    srand((unsigned)time(nullptr));
 
-	ObjCDef = ObjCDef.Div(0.0);
-	if (ObjCDef.getState() == STATE::BAD_DIV) cout << "BAD_DIV \n";
-	ObjCDef.Output();
-	cout << "ObjCopy state " << ObjCopy.getState() << endl;
-	if (ObjCopy.CompLessAll(ObjCDef))  cout << "ObjCopy less ObjDef  " << endl;
+    int rA, cA, rB, cB;
+    cout << "Rows of matrix A: ";    cin >> rA;
+    cout << "Cols of matrix A: ";  cin >> cA;
+    cout << "Rows of matrix B: ";    cin >> rB;
+    cout << "Cols of matrix B: ";  cin >> cB;
 
-	
-#if !defined(CODING_VS_CODE)
-	cout << "Завершення  тестування  \n";
-#else 
-	cout << "Completion of testing  \n";
-#endif
-	return 1;
+    MatrixShort A(rA, cA, 0), B(rB, cB, 0);
 
-}
-/*example  4
-Створити тип даних - клас вектор, який має вказівник на ComplexDouble, число елементів і змінну стану. У класі визначити
-o	 конструктор без параметрів( виділяє місце для одного елемента та інінціалізує його в нуль);
-o	конструктор з одним параметром - розмір вектора( виділяє місце та інінціалізує масив значенням нуль);
-o	конструктор із двома параметрами - розмір вектора та значення ініціалізації(виділяє місце (значення перший аргумент) та інінціалізує значенням другого аргументу).
-o	конструктор копій та операцію присвоєння; // !!!
-o	деструктор звільняє пам'ять;
-o	визначити функції друку, додавання;
-У змінну стани встановлювати код помилки, коли не вистачає пам'яті, виходить за межі масиву. Передбачити можливість підрахунку числа об'єктів даного типу. Написати програму тестування всіх можливостей цього класу.
-*/
+    int choice;
+    do {
+        cout << "\n--- Operations ---\n";
+        cout << "1  - Input A manually\n";
+        cout << "2  - Input B manually\n";
+        cout << "3  - Fill A randomly\n";
+        cout << "4  - Fill B randomly\n";
+        cout << "5  - Print A and B\n";
+        cout << "6  - A + B\n";
+        cout << "7  - A - B\n";
+        cout << "8  - A * B (matrix multiply)\n";
+        cout << "9  - A * scalar\n";
+        cout << "10 - Compare A and B\n";
+        cout << "11 - Change element of A\n";
+        cout << "12 - Get element of A\n";
+        cout << "0  - Back\n";
+        cout << "Choice: "; cin >> choice;
 
-#include<complex>
-using namespace std;
-typedef complex<double> ComplexDouble;
-#define _RE 0
-#define _IM 1
-
-class ComplexVector
-{
-	ComplexDouble* v;
-	int num;   // default num=2
-	int state = 0;
-public:
-	ComplexVector() : ComplexVector(2) {}
-	ComplexVector(int n);
-	ComplexVector(int n, ComplexDouble&);
-	ComplexVector(int n, ComplexDouble*);
-	ComplexVector(const ComplexVector& s);
-	ComplexVector& operator=(const ComplexVector& s);
-	~ComplexVector() {
-		std::cout << " del vec";
-		if (v) delete[] v;
-	}
-	void Output();
-	void Input();
-	ComplexVector Add(ComplexVector& b);
-
-};
-
-ComplexVector::ComplexVector(int n) {
-	if (n <= 0)    n = 2;  // default num =2;
-	num = n;
-	v = new ComplexDouble[n];
-	for (int i = 0; i < n; i++) {
-			v[i] = 0.0;
-			//v[i]._Val[_RE]=0.0; v[i]._Val[_IM]=0.0;  
-		}
-
-}
-ComplexVector::ComplexVector(int n, ComplexDouble& b) : ComplexVector(n) {
-	for (int i = 0; i < num; i++) {
-		v[i] = b;
-		//v[i]._Val[_RE]=0.0; v[i]._Val[_IM]=0.0;  
-	}
+        if (choice == 1) {
+            A.inputUser();
+        }
+        else if (choice == 2) {
+            B.inputUser();
+        }
+        else if (choice == 3) {
+            A.inputRandom(); cout << "A filled randomly\n"; A.print("A");
+        }
+        else if (choice == 4) {
+            B.inputRandom(); cout << "B filled randomly\n"; B.print("B");
+        }
+        else if (choice == 5) {
+            A.print("A"); B.print("B");
+        }
+        else if (choice == 6) {
+            A.add(B).print("A+B");
+        }
+        else if (choice == 7) {
+            A.sub(B).print("A-B");
+        }
+        else if (choice == 8) {
+            A.mul(B).print("A*B");
+        }
+        else if (choice == 9) {
+            short s; cout << "Scalar: "; cin >> s;
+            A.mulScalar(s).print("A*s");
+        }
+        else if (choice == 10) {
+            cout << "A>B:  " << A.greaterThan(B) << "\n";
+            cout << "A<B:  " << A.lessThan(B) << "\n";
+            cout << "A!=B: " << A.notEqual(B) << "\n";
+        }
+        else if (choice == 11) {
+            int i, j; short val;
+            cout << "Row: "; cin >> i;
+            cout << "Col: "; cin >> j;
+            cout << "New value: "; cin >> val;
+            A.setElem(i, j, val);
+        }
+        else if (choice == 12) {
+            int i, j;
+            cout << "Row: "; cin >> i;
+            cout << "Col: "; cin >> j;
+            cout << "A[" << i << "][" << j << "] = " << A.getElem(i, j) << "\n";
+        }
+    } while (choice != 0);
 }
 
-ComplexVector::ComplexVector(int n, ComplexDouble* p) : ComplexVector(n) {
-	if (p != nullptr) 
-	for (int i = 0; i < num; i++) 
-		v[i] = p[i];
-	
+// ===================== ГОЛОВНЕ МЕНЮ =====================
+
+int main() {
+    setlocale(LC_ALL, "");
+
+    int choice;
+    do {
+        cout << "\n============================\n";
+        cout << " Lab work #3, Variant 4\n";
+        cout << "============================\n";
+        cout << "1 - Parallelogram\n";
+        cout << "2 - Vector (short)\n";
+        cout << "3 - Matrix (short)\n";
+        cout << "0 - Exit\n";
+        cout << "Choice: ";
+        cin >> choice;
+
+        if (choice == 1) menuParallelogram();
+        else if (choice == 2) menuVector();
+        else if (choice == 3) menuMatrix();
+    } while (choice != 0);
+
+    cout << "Goodbye!\n";
+    return 0;
 }
-
-ComplexVector::ComplexVector(const ComplexVector& s) {
-	// if (this == &s) return;  // the expression is used in the old standard
-	num = s.num;
-	v = new ComplexDouble[num];
-	state = 0;
-	for (int i = 0; i < num; i++)   v[i] = s.v[i];
-}
-
-ComplexVector& ComplexVector::operator=(const ComplexVector& s) {
-
-	if (num != s.num)
-	{
-		if (v) delete[] v;
-		num = s.num;
-		v = new ComplexDouble[num];
-		state = 0;
-	}
-	for (int i = 0; i < num; i++)   v[i] = s.v[i];
-	return *this;
-}
-void ComplexVector::Input() {
-	int in_num=0;
-		do {
-			cout << "Input size Vec\n";
-			cin >> in_num;
-		} while (in_num <= 0);
-		if (num != in_num ) {
-			num = in_num;
-			if (v) delete[] v;
-		v = new ComplexDouble[num];
-	}
-	for (int i = 0; i < num; i++) {
-
-#if defined(_MSC_VER)
-cout << " v [ " << i << " ] real img  "; cin >> v[i] >> v[i]._Val[_IM];
-#else 
-double re,im;
-cout << " v [ " << i << " ] real img  "; cin >> re>>im;
-v[i].real(re); 
-v[i].imag(im);
-#endif		
-		
-		
-	}
-}
-
-void ComplexVector::Output() {
-	if (num != 0) {
-		for (int i = 0; i < num; i++) {
-			cout << " v [ " << i << " ]   " << v[i] << '\t';
-			cout << endl;
-		}
-	}
-}
-
-ComplexVector ComplexVector::Add(ComplexVector& b) {
-	int tnum;
-	tnum = num < b.num ? num : b.num;
-	if (tnum >= 0) {
-		ComplexVector tmp(tnum);
-		for (int i = 0; i < tnum; i++) tmp.v[i] = v[i] + b.v[i];
-		return tmp;
-	}
-	return ComplexVector(1);
-}
-
-
-int mainExample4()
-{
-	ComplexDouble a(1.0, 2), b, c;
-	cout << a << endl;
-#if defined(_MSC_VER)
-    b._Val[_RE] = 21.3;
-	b._Val[_IM] = 22.3;
-#else 
-    b.real( 21.3);
-	b.imag (22.3);
-#endif	
-	
-	cout << b << endl;
-	c = a + b;
-	cout << c << endl;
-	cout << " Test  " << endl;
-	ComplexVector VecObj, VecObj1(10);
-	cout << "VecObj \n";
-	VecObj.Output();
-	cout << "VecObj1 \n";
-	VecObj1.Output();
-	cout << " Input a " << endl;
-
-#if defined(_MSC_VER)
- cin >> a >> a._Val[_IM];
-#else 
-double re,im;
-cin >> re>>im;
-a.real(re); 
-a.imag(im);
-#endif		
-	cout << a << endl;
-	ComplexVector VecObj2(10, a);
-	VecObj2.Output();
-
-	VecObj.Input();
-	cout << endl;
-	VecObj.Output();
-	VecObj1 = VecObj.Add(VecObj2);
-	VecObj1.Output();
-
-	return 1;
-}
-
-/// 
-
