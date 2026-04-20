@@ -77,7 +77,8 @@ class VectorShort {
         num = (n > 0) ? n : 1;
         v = new(nothrow) short[num];
         state = v ? 0 : -1;
-        if (v) for (int i = 0; i < num; i++) v[i] = val;
+        if (v) 
+            for (int i = 0; i < num; i++) v[i] = val;
         ++count;
     }
 public:
